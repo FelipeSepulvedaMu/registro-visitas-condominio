@@ -1,4 +1,4 @@
-// backend/server.js (VERSIÓN FINAL CON RUT Y NOMBRE RESIDENTE)
+// backend/server.js (VERSIÓN PARA DESPLIEGUE EN RENDER)
 
 require('dotenv').config(); 
 const express = require('express');
@@ -6,7 +6,8 @@ const { Pool } = require('pg');
 const cors = require('cors'); 
 
 const app = express();
-const PORT = 3001;
+// 🔑 CAMBIO 1: Usar la variable de entorno PORT (proporcionada por Render)
+const PORT = process.env.PORT || 3001; 
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL, 
@@ -57,8 +58,22 @@ const initializeDatabase = async () => {
 };
 
 app.use(express.json());
+
+// 🔑 CAMBIO 2: Configuración de CORS para aceptar Vercel y Localhost
+const whitelist = [
+    'http://localhost:5173', 
+    'https://registro-visitas-condominio-wuim.vercel.app' // URL de tu Frontend
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: (origin, callback) => {
+        // Permitir si el origen está en la lista blanca O si no hay origen (ej. peticiones locales/cURL)
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));
@@ -176,5 +191,5 @@ app.get('/api/visitas', async (req, res) => {
 
 
 initializeDatabase().then(() => {
-    app.listen(PORT, () => console.log(`📡 Backend en http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`📡 Backend en puerto ${PORT}`));
 });
