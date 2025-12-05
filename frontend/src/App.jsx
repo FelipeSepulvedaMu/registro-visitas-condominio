@@ -4,19 +4,23 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react
 // Importar componentes
 import RegistroFormulario from './components/RegistroFormulario';
 import ListadoVisitas from './components/ListadoVisitas';
-import Navbar from './components/Navbar'; // Lo crearemos en el paso 3
+import Navbar from './components/Navbar'; 
 
 function AppContent() {
     const [visitas, setVisitas] = useState([]);
     const navigate = useNavigate(); // Hook para navegar entre rutas
 
+    // 🔑 Obtener la URL base de la API de las variables de entorno (Render URL)
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
     const cargarVisitas = useCallback(async (filtros = {}) => {
-        // Lógica para construir la URL de filtros (igual que antes)
+        // Lógica para construir la URL de filtros
         const params = new URLSearchParams();
         if (filtros.fecha) params.append('fecha', filtros.fecha);
         if (filtros.casa) params.append('casa', filtros.casa);
         
-        const url = `/api/visitas?${params.toString()}`;
+        // ✨ CAMBIO: Usar BASE_URL para construir la URL absoluta a la API
+        const url = `${BASE_URL}/api/visitas?${params.toString()}`;
 
         try {
             const response = await fetch(url);
@@ -27,7 +31,7 @@ function AppContent() {
             console.error("Error al obtener el listado:", error);
             setVisitas([]);
         }
-    }, []);
+    }, [BASE_URL]); // <-- Dependencia BASE_URL necesaria para useCallback
 
     useEffect(() => {
         cargarVisitas({});
@@ -46,7 +50,7 @@ function AppContent() {
                 <h1>Registro y Control de Visitas</h1>
             </header>
             
-            <Navbar /> {/* Incluimos el nuevo menú */}
+            <Navbar /> 
 
             <main>
                 <Routes>
@@ -54,6 +58,8 @@ function AppContent() {
                     <Route path="/" element={
                         <RegistroFormulario 
                             onRegistroExitoso={handleRegistroExitoso} 
+                            // 🔑 Pasar BASE_URL al formulario para las peticiones GET/POST
+                            BASE_URL={BASE_URL} 
                         />
                     } />
                     
@@ -61,6 +67,8 @@ function AppContent() {
                     <Route path="/registro" element={
                         <RegistroFormulario 
                             onRegistroExitoso={handleRegistroExitoso} 
+                            // 🔑 Pasar BASE_URL al formulario para las peticiones GET/POST
+                            BASE_URL={BASE_URL} 
                         />
                     } />
 
